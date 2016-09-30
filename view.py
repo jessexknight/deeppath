@@ -14,13 +14,13 @@ def imshow(I):
 
 def show_xyp(X, Y, P):
   ax = plt.subplot(1,3,1)
-  ax.imshow(X)
+  ax.imshow(X,vmin= 0.0,vmax=1.0)
   ax.axis('off')
   ax = plt.subplot(1,3,2)
-  ax.imshow(Y)
+  ax.imshow(Y,vmin= 0.0,vmax=1.0)
   ax.axis('off')
   ax = plt.subplot(1,3,3)
-  ax.imshow(P)
+  ax.imshow(P,vmin= 0.0,vmax=0.1)
   ax.axis('off')
   plt.show(block=False)
   plt.draw()

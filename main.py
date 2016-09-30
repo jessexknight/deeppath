@@ -12,7 +12,6 @@ import lasagne.layers         as ll
 import lasagne.updates        as lu
 import lasagne.objectives     as lo
 import lasagne.nonlinearities as lfcn
-from matplotlib.pyplot import pause
 
 '''
 -------------------------------------------------------------------------------- 
@@ -35,19 +34,19 @@ def build_model(input_shape, lr=0.01, mom=0.9, bs=16):
     knet = ll.Conv2DLayer    (knet,
                               name         = 'conv1',
                               num_filters  = 16,
-                              filter_size  = (9,9),
+                              filter_size  = (5,5),
                               stride       = 1,
                               pad          = 'same',
                               nonlinearity = lfcn.rectify,
                               W            = li.GlorotUniform()
                               )
-#     knet = ll.dropout        (knet,
-#                               name         = 'dropout1', 
-#                               p            = 0.5
-#                               )
+    knet = ll.dropout        (knet,
+                              name         = 'dropout1', 
+                              p            = 0.5
+                              )
     knet = ll.Conv2DLayer    (knet,
                               name         = 'conv2',
-                              num_filters  = 8,
+                              num_filters  = 16,
                               filter_size  = (5,5),
                               stride       = 1,
                               pad          = 'same',
@@ -74,13 +73,13 @@ def build_model(input_shape, lr=0.01, mom=0.9, bs=16):
     output     = ll.get_output(net)
     test_pred  = ll.get_output(net, deterministic=True)
     params     = ll.get_all_params(net, trainable=True)
-    loss       = tt.mean(lo.squared_error(output,    y+1), dtype=t.config.floatX)
-    test_loss  = tt.mean(lo.squared_error(test_pred, y+1), dtype=t.config.floatX)
+    loss       = tt.mean(lo.squared_error(output,    y), dtype=t.config.floatX)
+    test_loss  = tt.mean(lo.squared_error(test_pred, y), dtype=t.config.floatX)
     updates    = lu.nesterov_momentum(loss, params, learning_rate=lr, momentum=mom)
     train_fcn  = t.function([x,y], loss,      updates=updates, allow_input_downcast=True)
     valid_fcn  = t.function([x,y], test_loss, updates=None,    allow_input_downcast=True)
     preds_fcn  = t.function([x],   test_pred, updates=None,    allow_input_downcast=True)
-   
+  
     return [output, params, train_fcn, valid_fcn, preds_fcn]
   
   print('Defining Net...')
@@ -106,9 +105,9 @@ def train_net(xtrain, ytrain, xvalid, yvalid,
     print("  V loss =\t{:.5}".format(verr/nvb))
   
   def img_update(preds_fcn, xtrain, ytrain, idx=0):
-    # ypreds = make_preds(preds_fcn, xtrain, ytrain, ytrain.shape[0])
-    # view.show_xyp(xtrain[idx,:,:], ytrain[idx,:,:], ypreds[idx,:,:])
-    view.show_filters(net,1)
+    ypreds = make_preds(preds_fcn, xtrain, ytrain, ytrain.shape[0])
+    view.show_xyp(xtrain[idx,:,:], ytrain[idx,:,:], ypreds[idx,:,:])
+    # view.show_filters(net,1)
   
   print('Training Net...')
   for epoch in range(ne):
@@ -144,8 +143,8 @@ hyperparameters
 '''
 def define_hypers():
   # make into .cfg file
-  learning_rate = 100
-  n_epochs      = 10
+  learning_rate = 0.002
+  n_epochs      = 1
   batch_size    = 10L
   img_size      = (500L, 500L)
   input_size    = (batch_size, 1L, img_size[0], img_size[1])
@@ -181,7 +180,7 @@ tnet = train_net(xtrain, ytrain, xvalid, yvalid,
                  knet, train_fcn, valid_fcn, preds_fcn,
                  lr=learning_rate, ne=n_epochs, bs=batch_size)
 
-# ypreds = make_preds(preds_fcn, xtests, ytests, ytests.shape[0])
+ypreds = make_preds(preds_fcn, xtests, ytests, ytests.shape[0])
 # for i in range(ytests.shape[0]):
 #   view.show_xyp(xtests[i,:,:], ytests[i,:,:], ypreds[i,:,:])
 
